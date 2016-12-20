@@ -26,7 +26,6 @@ public class Book extends AbstractPersistable<Long> {
     public static final int MAX_BOOK_DESCRIPTION_LENGTH = 2000;
 
     @NotNull
-    @Size(max = MAX_BOOK_IDENTIFIER_LENGTH)
     @Column(nullable = false, length = MAX_BOOK_IDENTIFIER_LENGTH)
     private UUID identifier;
 
@@ -47,7 +46,6 @@ public class Book extends AbstractPersistable<Long> {
     private String description;
 
     @NotNull
-    @Size(max = MAX_BOOK_GENRE_LENGTH)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = MAX_BOOK_GENRE_LENGTH)
     private Genre genre;

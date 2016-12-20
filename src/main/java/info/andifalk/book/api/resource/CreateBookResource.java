@@ -1,5 +1,6 @@
 package info.andifalk.book.api.resource;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import info.andifalk.book.entity.Book;
 import info.andifalk.book.entity.Genre;
 
@@ -16,7 +17,6 @@ import static info.andifalk.book.entity.Book.*;
 public class CreateBookResource {
 
     @NotNull
-    @Size(max = MAX_BOOK_IDENTIFIER_LENGTH)
     private UUID identifier;
 
     @NotNull
@@ -33,8 +33,14 @@ public class CreateBookResource {
     private String description;
 
     @NotNull
-    @Size(max = MAX_BOOK_GENRE_LENGTH)
     private Genre genre;
+
+    /**
+     * Constructor for jackson.
+     */
+    public CreateBookResource() {
+        super();
+    }
 
     /**
      * Constructor.
@@ -57,7 +63,10 @@ public class CreateBookResource {
      * @param description book description
      * @param genre book genre
      */
-    public CreateBookResource(UUID identifier, String title, String isbn, String description, Genre genre) {
+    public CreateBookResource(
+            @JsonProperty("id") UUID identifier, @JsonProperty("title") String title,
+            @JsonProperty("isbn") String isbn, @JsonProperty("description") String description,
+            @JsonProperty("genre") Genre genre) {
         this.identifier = identifier;
         this.title = title;
         this.isbn = isbn;

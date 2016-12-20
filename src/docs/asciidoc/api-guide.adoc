@@ -98,7 +98,6 @@ All provided primary and sub resources of Books REST API are described in the fo
 [[resources]]
 == Resources
 
-
 [[resources-books]]
 === List of Books
 
@@ -126,3 +125,154 @@ include::{snippets}/books/document-get-books/response-fields.adoc[]
 ==== Links
 
 include::{snippets}/books/document-get-books/links.adoc[]
+
+
+[[resources-book]]
+=== Single Books
+
+The single book provides the entry point into the books detail resource service.
+
+[[resources-book-access]]
+==== Request
+
+A `GET` request is used to access a single book
+
+include::{snippets}/books/document-get-book/http-request.adoc[]
+
+include::{snippets}/books/document-get-book/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/books/document-get-book/http-response.adoc[]
+
+==== Response fields
+
+include::{snippets}/books/document-get-book/response-fields.adoc[]
+
+[[resources-book-links]]
+
+==== Links
+
+include::{snippets}/books/document-get-book/links.adoc[]
+
+
+[[resources-create-book]]
+=== Create Book
+
+This provides the entry point for creating new book resources.
+
+[[resources-create-book-access]]
+==== Request
+
+A `POST` request is used to create a new book
+
+==== Request fields
+
+include::{snippets}/books/document-create-book/request-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/books/document-create-book/http-request.adoc[]
+
+include::{snippets}/books/document-create-book/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/books/document-create-book/http-response.adoc[]
+
+==== Response fields
+
+include::{snippets}/books/document-create-book/response-fields.adoc[]
+
+[[resources-book-links]]
+
+==== Links
+
+include::{snippets}/books/document-create-book/links.adoc[]
+
+
+[[resources-delete-book]]
+=== Delete Book
+
+This provides the entry point to delete a book resource.
+
+[[resources-delete-book-access]]
+==== Request
+
+A `DELETE` request is used to delete a book
+
+include::{snippets}/books/document-delete-book/http-request.adoc[]
+
+include::{snippets}/books/document-delete-book/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/books/document-delete-book/http-response.adoc[]
+
+
+[[resources-find-books-isbn]]
+=== Find Books by ISBN number
+
+This provides the entry point for searching books by ISBN number.
+
+==== Request
+
+A `GET` request is used to search books by ISBN number
+
+==== Request parameters
+
+include::{snippets}/books/document-find-books-by-isbn/request-parameters.adoc[]
+
+==== Example request
+
+include::{snippets}/books/document-find-books-by-isbn/http-request.adoc[]
+
+include::{snippets}/books/document-find-books-by-isbn/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/books/document-find-books-by-isbn/http-response.adoc[]
+
+==== Response fields
+
+include::{snippets}/books/document-find-books-by-isbn/response-fields.adoc[]
+
+[[resources-book-links]]
+
+==== Links
+
+include::{snippets}/books/document-find-books-by-isbn/links.adoc[]
+
+
+[[resources-find-books-title]]
+=== Find Books by title
+
+This provides the entry point for searching books by title.
+
+==== Request
+
+A `GET` request is used to search books by title
+
+==== Request parameters
+
+include::{snippets}/books/document-find-books-by-title/request-parameters.adoc[]
+
+==== Example request
+
+include::{snippets}/books/document-find-books-by-title/http-request.adoc[]
+
+include::{snippets}/books/document-find-books-by-title/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/books/document-find-books-by-title/http-response.adoc[]
+
+==== Response fields
+
+include::{snippets}/books/document-find-books-by-title/response-fields.adoc[]
+
+[[resources-book-links]]
+
+==== Links
+
+include::{snippets}/books/document-find-books-by-title/links.adoc[]

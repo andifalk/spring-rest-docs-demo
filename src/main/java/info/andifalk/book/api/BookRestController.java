@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.util.Collection;
 import java.util.UUID;
 
 /**
@@ -64,12 +65,22 @@ public class BookRestController {
 
     @RequestMapping(path = "/search", method = RequestMethod.GET)
     public ResponseEntity<?> findByQuery(
-            @MatrixVariable(required = false, name = "isbn") String isbn,
-            @MatrixVariable(required = false, name = "title") String title) {
+            @RequestParam(required = false, name = "isbn") String isbn,
+            @RequestParam(required = false, name = "title") String title) {
         if (StringUtils.isNotBlank(isbn)) {
-            return new ResponseEntity<>(new BookListResource(bookService.findByIsbn(isbn), isbn, title), HttpStatus.OK);
+            Collection<Book> books = bookService.findByIsbn(isbn);
+            if (books.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            } else {
+                return new ResponseEntity<>(new BookListResource(books, isbn, title), HttpStatus.OK);
+            }
         } else if (StringUtils.isNotBlank(title)) {
-            return new ResponseEntity<>(new BookListResource(bookService.findByTitle(title), isbn, title), HttpStatus.OK);
+            Collection<Book> books = bookService.findByTitle(title);
+            if (books.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            } else {
+                return new ResponseEntity<>(new BookListResource(books, isbn, title), HttpStatus.OK);
+            }
         } else {
             return ResponseEntity.badRequest().build();
         }

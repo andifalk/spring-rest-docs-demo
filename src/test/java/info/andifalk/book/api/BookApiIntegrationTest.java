@@ -11,19 +11,26 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.constraints.ConstraintDescriptions;
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.JsonFieldType;
+import org.springframework.restdocs.payload.ResponseFieldsSnippet;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
@@ -32,11 +39,16 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.restdocs.snippet.Attributes.key;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -62,16 +74,45 @@ public class BookApiIntegrationTest {
     private BookService bookService;
 
     private UUID phoenixBookId = UUID.randomUUID();
-
     private UUID potterBookId = UUID.randomUUID();
+    private UUID createdBookId = UUID.randomUUID();
+
+    private Book phoenix;
+    private Book potter;
+
+    private ResponseFieldsSnippet bookResponseFieldsSnippet = responseFields(
+            fieldWithPath("id").description("The book id"),
+            fieldWithPath("title").description("The book title"),
+            fieldWithPath("description").description(
+                    "The book description"),
+            fieldWithPath("isbn").description(
+                    "The ISBN of the book"),
+            fieldWithPath("genre").description(
+                    "The book genre"),
+            fieldWithPath("_links").ignored()
+    );
+
+    private ResponseFieldsSnippet bookListResponseFieldsSnippet = responseFields(
+            fieldWithPath("books[]").description("List of books"),
+            fieldWithPath("books[].id").description("The book id"),
+            fieldWithPath("books[].title").description("The book title"),
+            fieldWithPath("books[].description").description(
+                    "The book description"),
+            fieldWithPath("books[].isbn").description(
+                    "The ISBN of the book"),
+            fieldWithPath("books[].genre").description(
+                    "The book genre"),
+            fieldWithPath("books[]._links").ignored(),
+            fieldWithPath("_links").ignored()
+    );
 
     @Before
     public void initMocks() {
 
-        Book phoenix = new Book(phoenixBookId, "Project Phoenix", "978-0-9587-5175-0",
+        phoenix = new Book(phoenixBookId, "Project Phoenix", "978-0-9587-5175-0",
                 "Bill is an IT manager at Parts Unlimited...", Genre.COMPUTER);
 
-        Book potter = new Book(potterBookId, "Harry Potter and the Cursed Child", "978-0-7515-6535-5",
+        potter = new Book(potterBookId, "Harry Potter and the Cursed Child", "978-0-7515-6535-5",
                 "Based on an original new story by J.K. Rowling, John Tiffany and Jack Thorne, ...",
                 Genre.COMPUTER);
 
@@ -79,15 +120,28 @@ public class BookApiIntegrationTest {
 
         when(bookService.findByIdentifier(eq(phoenixBookId))).thenReturn(phoenix);
         when(bookService.findByIdentifier(eq(potterBookId))).thenReturn(potter);
+
+        when(bookService.findByIsbn(eq(phoenix.getIsbn()))).thenReturn(Collections.singletonList(phoenix));
+        when(bookService.findByTitle(eq(potter.getTitle()))).thenReturn(Collections.singletonList(potter));
+
+        when(bookService.createBook(any(Book.class))).thenAnswer(invocation -> {
+            Book book = invocation.getArgumentAt(0, Book.class);
+            ReflectionTestUtils.setField(book, "id", 1L);
+            return book;
+        });
+
+        when(bookService.deleteBook(eq(phoenixBookId))).thenReturn(true);
     }
 
     @Test
-    public void createBook() throws Exception {
-        String expectedUrl = BookRestController.BOOK_RESOURCE_PATH + "/" + COMPANY_ID_1;
+    public void documentAndVerifyCreateBook() throws Exception {
+        String expectedUrl = BookRestController.BOOK_RESOURCE_PATH + "/" + createdBookId;
 
         CreateBookResource createBookResource = new CreateBookResource(
-                "Raspberry Pi 3: Beginner to Pro", "978-1-5393-4298-4",
+                createdBookId,"Raspberry Pi 3: Beginner to Pro", "978-1-5393-4298-4",
                 "Learn all about the Raspberry Pi3 and what you can do with it", Genre.COMPUTER);
+
+        ConstrainedFields fields = new ConstrainedFields(CreateBookResource.class);
 
         this.mockMvc.perform(post(BookRestController.BOOK_RESOURCE_PATH)
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -95,44 +149,49 @@ public class BookApiIntegrationTest {
                 .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
                 .andExpect(status().isCreated())
                 .andExpect(header().string(LOCATION_HEADER, endsWith(expectedUrl)))
-                .andExpect(jsonPath("$.title").value("Raspberry Pi 3: Beginner to Pro"))
-                .andExpect(jsonPath("$.streetAddress.zipCode").value(ADDRESS_ZIPCODE))
-                .andExpect(jsonPath("$.streetAddress.city").value(ADDRESS_CITY))
-                .andExpect(jsonPath("$.streetAddress.area").value(ADDRESS_AREA))
-                .andExpect(jsonPath("$.streetAddress.country").value(ADDRESS_COUNTRY))
-                .andExpect(jsonPath("$.streetAddress.street").value(ADDRESS_STREETNAME))
-                .andExpect(jsonPath("$.streetAddress.houseNumber").value(ADDRESS_HOUSE_NUMBER))
-                .andExpect(jsonPath("$.postBoxAddress.zipCode").value(ADDRESS_ZIPCODE))
-                .andExpect(jsonPath("$.postBoxAddress.city").value(ADDRESS_CITY))
-                .andExpect(jsonPath("$.postBoxAddress.area").isEmpty())
-                .andExpect(jsonPath("$.postBoxAddress.country").value(ADDRESS_COUNTRY))
-                .andExpect(jsonPath("$.postBoxAddress.postBox").value(ADDRESS_POBOX))
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.title").isString())
                 .andDo(
                         document(
-                                "document-create-company",
+                                "document-create-book",
                                 requestFields(
-                                        fieldWithPath("name").description("Company name"),
-                                        fieldWithPath("representative").description("UUID of the user representative"),
-                                        fieldWithPath("streetAddress").description("The company's street address "
-                                                + "(either the street address or the post box address or both "
-                                                + "must be provided"),
-                                        fieldWithPath("postBoxAddress").description("The company's post office box "
-                                                + "address (either the street address or the post box address or both "
-                                                + "must be provided")
+                                        fields
+                                                .withPath("title")
+                                                .description("The book title")
+                                                .type(JsonFieldType.STRING),
+                                        fields
+                                                .withPath("isbn")
+                                                .description("The book's ISBN number (ISBN-13 format)")
+                                                .type(JsonFieldType.STRING),
+                                        fields
+                                                .withPath("genre")
+                                                .description("The book genre")
+                                                .type(JsonFieldType.STRING),
+                                        fields
+                                                .withPath("identifier")
+                                                .description("The book identifier (generated automatically if not set)")
+                                                .type(JsonFieldType.STRING)
+                                                .optional(),
+                                        fields
+                                                .withPath("description")
+                                                .description("The book description")
+                                                .type(JsonFieldType.STRING)
+                                                .optional()
                                 )
                         ))
-                .andDo(document("document-create-company", preprocessResponse(prettyPrint()),
-                        companyLinks,
+                .andDo(document("document-create-book", preprocessResponse(prettyPrint()),
+                        links(linkWithRel(Link.REL_SELF).description("Links to the created book")),
                         responseHeaders(
                                 headerWithName(LOCATION_HEADER)
-                                        .description("The location of created company resource")
+                                        .description("The location of created book resource")
                         ),
-                        companyResponseFields
+                        bookResponseFieldsSnippet
                 ));
     }
 
     @Test
-    public void findByIdentifier() throws Exception {
+    public void documentAndVerifyFindByIdentifier() throws Exception {
+
         this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
                 .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
                 .andExpect(status().isOk())
@@ -143,22 +202,13 @@ public class BookApiIntegrationTest {
                         document("document-get-book",
                                 preprocessResponse(prettyPrint()),
                                 links(linkWithRel(Link.REL_SELF).description("Links to the current book")),
-                                responseFields(
-                                        fieldWithPath("id").description("The book id"),
-                                        fieldWithPath("title").description("The book title"),
-                                        fieldWithPath("description").description(
-                                                "The book description"),
-                                        fieldWithPath("isbn").description(
-                                                "The ISBN of the book"),
-                                        fieldWithPath("genre").description(
-                                                "The book genre"),
-                                        fieldWithPath("_links").ignored()
-                                )
+                                bookResponseFieldsSnippet
                         ));
     }
 
     @Test
-    public void findAllBooks() throws Exception {
+    public void documentAndVerifyFindAllBooks() throws Exception {
+
         this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH)
                 .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
                 .andExpect(status().isOk())
@@ -169,30 +219,87 @@ public class BookApiIntegrationTest {
                         document("document-get-books",
                                 preprocessResponse(prettyPrint()),
                                 links(linkWithRel(Link.REL_SELF).description("Links to the current list of books")),
-                                responseFields(
-                                        fieldWithPath("books[]").description("List of books"),
-                                        fieldWithPath("books[].id").description("The book id"),
-                                        fieldWithPath("books[].title").description("The book title"),
-                                        fieldWithPath("books[].description").description(
-                                                "The book description"),
-                                        fieldWithPath("books[].isbn").description(
-                                                "The ISBN of the book"),
-                                        fieldWithPath("books[].genre").description(
-                                                "The book genre"),
-                                        fieldWithPath("books[]._links").ignored(),
-                                        fieldWithPath("_links").ignored()
-                                )
+                                bookListResponseFieldsSnippet
                         ));
     }
 
     @Test
-    public void findByIsbn() throws Exception {
-
+    public void documentAndVerifyFindByIsbn() throws Exception {
+        this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH + "/search?isbn=" + phoenix.getIsbn())
+                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(EXPECTED_MEDIA_TYPE))
+                .andExpect(jsonPath("$.books").isArray())
+                .andExpect(jsonPath("$.books.length()").value(is(1)))
+                .andDo(
+                        document("document-find-books-by-isbn",
+                                requestParameters(
+                                        parameterWithName("isbn")
+                                                .optional()
+                                                .description("Search parameter to filter books for given ISBN"),
+                                        parameterWithName("title")
+                                                .optional()
+                                                .description("Search parameter to filter books for given title")
+                                )
+                        ))
+                .andDo(
+                        document("document-find-books-by-isbn",
+                                preprocessResponse(prettyPrint()),
+                                links(linkWithRel(Link.REL_SELF).description("Links to the book list")),
+                                bookListResponseFieldsSnippet
+                        ));
     }
 
     @Test
-    public void deleteBook() throws Exception {
+    public void documentAndVerifyFindByTitle() throws Exception {
+        this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH + "/search?title=" + potter.getTitle())
+                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(EXPECTED_MEDIA_TYPE))
+                .andExpect(jsonPath("$.books").isArray())
+                .andExpect(jsonPath("$.books.length()").value(is(1)))
+                .andDo(
+                        document("document-find-books-by-title",
+                                requestParameters(
+                                        parameterWithName("isbn")
+                                                .optional()
+                                                .description("Search parameter to filter books for given ISBN"),
+                                        parameterWithName("title")
+                                                .optional()
+                                                .description("Search parameter to filter books for given title")
+                                )
+                        ))
+                .andDo(
+                        document("document-find-books-by-title",
+                                preprocessResponse(prettyPrint()),
+                                links(linkWithRel(Link.REL_SELF).description("Links to the book list")),
+                                bookListResponseFieldsSnippet
+                        ));
+    }
 
+    @Test
+    public void documentAndVerifyDeleteBook() throws Exception {
+        this.mockMvc.perform(delete(
+                BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
+                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .andExpect(status().isNoContent())
+                .andDo(
+                        document("document-delete-book"));
+    }
+
+    private static class ConstrainedFields {
+
+        private final ConstraintDescriptions constraintDescriptions;
+
+        ConstrainedFields(Class<?> input) {
+            this.constraintDescriptions = new ConstraintDescriptions(input);
+        }
+
+        private FieldDescriptor withPath(String path) {
+            return fieldWithPath(path).attributes(key("constraints").value(StringUtils
+                    .collectionToDelimitedString(this.constraintDescriptions
+                            .descriptionsForProperty(path), ". ")));
+        }
     }
 
 }
