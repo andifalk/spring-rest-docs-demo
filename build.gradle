@@ -1,0 +1,56 @@
+buildscript {
+	ext {
+		springBootVersion = '1.4.2.RELEASE'
+        snippetsDir = file('build/generated-snippets')
+	}
+	repositories {
+		mavenCentral()
+        jcenter()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3'
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'org.asciidoctor.convert'
+
+test {
+	outputs.dir snippetsDir
+}
+
+asciidoctor {
+	attributes 'snippets': snippetsDir
+	inputs.dir snippetsDir
+	dependsOn test
+}
+
+jar {
+	baseName = 'spring-rest-docs-demo'
+	version = '0.0.1-SNAPSHOT'
+    dependsOn asciidoctor
+    from("${asciidoctor.outputDir}/html5") {
+        into 'static/docs'
+    }
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-data-jpa')
+	compile('org.springframework.boot:spring-boot-starter-hateoas')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.apache.commons:commons-lang3:3.5')
+	runtime('org.springframework.boot:spring-boot-devtools')
+	runtime('com.h2database:h2')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc')
+}
