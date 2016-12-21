@@ -3,10 +3,12 @@ package info.andifalk.book.api.resource;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import info.andifalk.book.entity.Book;
 import info.andifalk.book.entity.Genre;
+import info.andifalk.common.StringEnumeration;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.EnumSet;
 import java.util.UUID;
 
 import static info.andifalk.book.entity.Book.*;
@@ -24,8 +26,7 @@ public class CreateBookResource {
     private String title;
 
     @NotNull
-    @Pattern(regexp = "^(?:ISBN(?:-13)?:?\\ )?(?=[0-9]{13}$|(?=(?:[0-9]+[-]){4})[-0-9]{17}$)" +
-            "97[89][-]?[0-9]{1,5}[-]?[0-9]+[-]?[0-9]+[-]?[0-9]$")
+    @Pattern(regexp = "978-[0-9-]{13}")
     @Size(min = MIN_BOOK_ISBN_LENGTH, max = MAX_BOOK_ISBN_LENGTH)
     private String isbn;
 
@@ -33,6 +34,9 @@ public class CreateBookResource {
     private String description;
 
     @NotNull
+    @StringEnumeration(
+            enumClass = Genre.class,
+            enumValues = "FANTASY, HORROR, HUMOR, SCIENCE_FICTION, MYSTERY, WESTERN, CRIME, BIOGRAPHY, COMPUTER")
     private Genre genre;
 
     /**

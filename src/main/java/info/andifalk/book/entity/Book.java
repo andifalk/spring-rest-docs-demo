@@ -1,5 +1,6 @@
 package info.andifalk.book.entity;
 
+import info.andifalk.common.StringEnumeration;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
@@ -46,6 +47,7 @@ public class Book extends AbstractPersistable<Long> {
     private String description;
 
     @NotNull
+    @StringEnumeration(enumClass = Genre.class)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = MAX_BOOK_GENRE_LENGTH)
     private Genre genre;

@@ -56,7 +56,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration test for {@link BookRestController books api}.
  */
 @RunWith(SpringRunner.class)
-//@SpringBootTest(classes = SpringRestDocsDemoApplication.class)
 @WebMvcTest(controllers = BookRestController.class)
 @AutoConfigureRestDocs(outputDir = "build/generated-snippets/books")
 public class BookApiIntegrationTest {
