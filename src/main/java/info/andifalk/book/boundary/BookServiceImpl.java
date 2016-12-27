@@ -56,6 +56,7 @@ public class BookServiceImpl implements BookService {
         return this.bookRepository.findByTitleLike(title);
     }
 
+    @Transactional
     @Override
     public boolean deleteBook(UUID identifier) {
         long count = this.bookRepository.deleteByIdentifier(identifier);

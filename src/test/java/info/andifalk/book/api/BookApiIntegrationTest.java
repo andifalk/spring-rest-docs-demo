@@ -88,6 +88,8 @@ public class BookApiIntegrationTest {
                     "The ISBN of the book"),
             fieldWithPath("genre").description(
                     "The book genre"),
+            fieldWithPath("authors").description(
+                    "The book authors"),
             fieldWithPath("_links").ignored()
     );
 
@@ -101,6 +103,8 @@ public class BookApiIntegrationTest {
                     "The ISBN of the book"),
             fieldWithPath("books[].genre").description(
                     "The book genre"),
+            fieldWithPath("books[].authors").description(
+                    "The book authors"),
             fieldWithPath("books[]._links").ignored(),
             fieldWithPath("_links").ignored()
     );

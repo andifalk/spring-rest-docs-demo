@@ -1,15 +1,15 @@
 package info.andifalk.book.entity;
 
+import info.andifalk.author.entity.Author;
 import info.andifalk.common.StringEnumeration;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -18,13 +18,13 @@ import java.util.UUID;
 @Entity
 public class Book extends AbstractPersistable<Long> {
 
-    public static final int MAX_BOOK_IDENTIFIER_LENGTH = 50;
     public static final int MAX_BOOK_TITLE_LENGTH = 100;
     public static final int MIN_BOOK_TITLE_LENGTH = 1;
-    public static final int MAX_BOOK_GENRE_LENGTH = 100;
     public static final int MIN_BOOK_ISBN_LENGTH = 17;
     public static final int MAX_BOOK_ISBN_LENGTH = 26;
     public static final int MAX_BOOK_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_BOOK_GENRE_LENGTH = 100;
+    private static final int MAX_BOOK_IDENTIFIER_LENGTH = 50;
 
     @NotNull
     @Column(nullable = false, length = MAX_BOOK_IDENTIFIER_LENGTH)
@@ -51,6 +51,9 @@ public class Book extends AbstractPersistable<Long> {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = MAX_BOOK_GENRE_LENGTH)
     private Genre genre;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Author> authors = new HashSet<>();
 
     /**
      * For JPA.
@@ -110,6 +113,15 @@ public class Book extends AbstractPersistable<Long> {
 
     public Book setIdentifier(UUID identifier) {
         this.identifier = identifier;
+        return this;
+    }
+
+    public Set<Author> getAuthors() {
+        return authors;
+    }
+
+    public Book setAuthors(Set<Author> authors) {
+        this.authors = authors;
         return this;
     }
 
