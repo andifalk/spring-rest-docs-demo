@@ -26,6 +26,12 @@ public class Book extends AbstractPersistable<Long> {
     private static final int MAX_BOOK_GENRE_LENGTH = 100;
     private static final int MAX_BOOK_IDENTIFIER_LENGTH = 50;
 
+    @SuppressWarnings("unused")
+    @Version
+    @NotNull
+    @Column(nullable = false)
+    private Long version;
+
     @NotNull
     @Column(nullable = false, length = MAX_BOOK_IDENTIFIER_LENGTH)
     private UUID identifier;
@@ -91,6 +97,26 @@ public class Book extends AbstractPersistable<Long> {
         this.genre = genre;
     }
 
+    public Book setTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public Book setIsbn(String isbn) {
+        this.isbn = isbn;
+        return this;
+    }
+
+    public Book setDescription(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public Book setGenre(Genre genre) {
+        this.genre = genre;
+        return this;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -123,6 +149,10 @@ public class Book extends AbstractPersistable<Long> {
     public Book setAuthors(Set<Author> authors) {
         this.authors = authors;
         return this;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

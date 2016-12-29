@@ -75,4 +75,13 @@ public class AuthorRestController {
             return new ResponseEntity<>(new AuthorListResource(authors, lastname), HttpStatus.OK);
         }
     }
+
+    @RequestMapping(path = "/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> deleteAuthor(@PathVariable("id") UUID identifier) {
+        if (authorService.deleteAuthor(identifier)) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

@@ -62,4 +62,9 @@ public class BookServiceImpl implements BookService {
         long count = this.bookRepository.deleteByIdentifier(identifier);
         return count > 0;
     }
+
+    @Override
+    public Book updateBook(Book book) {
+        return this.bookRepository.save(book);
+    }
 }

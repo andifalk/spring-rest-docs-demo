@@ -3,10 +3,7 @@ package com.example.author.entity;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.UUID;
@@ -23,6 +20,12 @@ public class Author extends AbstractPersistable<Long> {
     public static final int MIN_AUTHOR_LASTNAME_LENGTH = 1;
     private static final int MAX_AUTHOR_IDENTIFIER_LENGTH = 50;
     private static final int MAX_AUTHOR_GENDER_LENGTH = 30;
+
+    @SuppressWarnings("unused")
+    @Version
+    @NotNull
+    @Column(nullable = false)
+    private Long version;
 
     @NotNull
     @Column(nullable = false, length = MAX_AUTHOR_IDENTIFIER_LENGTH)
@@ -100,6 +103,10 @@ public class Author extends AbstractPersistable<Long> {
 
     public String getFullname() {
         return firstname + " " + lastname;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

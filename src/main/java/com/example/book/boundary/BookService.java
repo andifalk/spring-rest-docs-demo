@@ -57,4 +57,11 @@ public interface BookService {
      */
     boolean deleteBook(UUID identifier);
 
+    /**
+     * Updates the given book.
+     *
+     * @param book the book to update
+     * @return the updated book
+     */
+    Book updateBook(Book book);
 }

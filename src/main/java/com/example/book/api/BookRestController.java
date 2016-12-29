@@ -3,6 +3,7 @@ package com.example.book.api;
 import com.example.book.api.resource.BookListResource;
 import com.example.book.api.resource.BookResource;
 import com.example.book.api.resource.CreateBookResource;
+import com.example.book.api.resource.UpdateBookResource;
 import com.example.book.boundary.BookService;
 import com.example.book.entity.Book;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
@@ -41,11 +43,13 @@ public class BookRestController {
     public ResponseEntity<?> createBook(@Valid @RequestBody CreateBookResource createBookResource) {
         Book book = bookService.createBook(createBookResource.createBook());
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(ServletUriComponentsBuilder
-                .fromCurrentRequest().path("/{bookId}")
-                .buildAndExpand(book.getIdentifier()).toUri());
-        return new ResponseEntity<>(new BookResource(book), httpHeaders, HttpStatus.CREATED);
+        return ResponseEntity
+                .created(ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/{bookId}")
+                        .buildAndExpand(book.getIdentifier()).toUri())
+                .eTag(book.getVersion().toString())
+                .body(new BookResource(book));
     }
 
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
@@ -54,7 +58,7 @@ public class BookRestController {
         if (book == null) {
             return ResponseEntity.notFound().build();
         } else {
-            return new ResponseEntity<>(new BookResource(book), HttpStatus.OK);
+            return ResponseEntity.ok().eTag(book.getVersion().toString()).body(new BookResource(book));
         }
     }
 
@@ -83,6 +87,28 @@ public class BookRestController {
             }
         } else {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @RequestMapping(path = "/{id}", method = RequestMethod.PUT)
+    public ResponseEntity<?> updateBook(
+            WebRequest request,
+            @PathVariable("id") UUID identifier,
+            @Valid @RequestBody UpdateBookResource updateBookResource) {
+        Book book = bookService.findByIdentifier(identifier);
+        if (book == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (request.checkNotModified(book.getVersion().toString())) {
+            book.setDescription(updateBookResource.getDescription());
+            book.setGenre(updateBookResource.getGenre());
+            book.setIsbn(updateBookResource.getIsbn());
+            book.setTitle(updateBookResource.getTitle());
+            book = bookService.updateBook(book);
+            return new ResponseEntity<>(new BookResource(book), HttpStatus.OK);
+        } else {
+            return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
         }
     }
 

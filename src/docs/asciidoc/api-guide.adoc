@@ -17,7 +17,8 @@ The Books API is provided as a RESTFul service.
 The API uses level 3 (hypermedia controls) of the
 http://martinfowler.com/articles/richardsonMaturityModel.html[Richardson Maturity Model].
 
-All body payloads (requests and responses) are in JSON format.
+All body payloads (requests and responses) are in
+http://www.json.org[JSON format].
 
 [[overview-http-verbs]]
 === HTTP verbs
@@ -186,7 +187,7 @@ include::{snippets}/books/document-create-book/http-response.adoc[]
 
 include::{snippets}/books/document-create-book/response-fields.adoc[]
 
-[[resources-book-links]]
+[[resources-create-book-links]]
 
 ===== Links
 
@@ -239,7 +240,7 @@ include::{snippets}/books/document-find-books-by-isbn/http-response.adoc[]
 
 include::{snippets}/books/document-find-books-by-isbn/response-fields.adoc[]
 
-[[resources-book-links]]
+[[resources-find-books-isbn-links]]
 
 ===== Links
 
@@ -273,7 +274,7 @@ include::{snippets}/books/document-find-books-by-title/http-response.adoc[]
 
 include::{snippets}/books/document-find-books-by-title/response-fields.adoc[]
 
-[[resources-book-links]]
+[[resources-find-books-title-links]]
 
 ===== Links
 
@@ -281,4 +282,148 @@ include::{snippets}/books/document-find-books-by-title/links.adoc[]
 
 === Authors
 
-TODO
+[[resources-authors]]
+==== List of Authors
+
+The author list provides the entry point into the authors resource service.
+
+[[resources-authors-access]]
+===== Request
+
+A `GET` request is used to access the authors
+
+include::{snippets}/authors/document-get-authors/http-request.adoc[]
+
+include::{snippets}/authors/document-get-authors/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/authors/document-get-authors/http-response.adoc[]
+
+===== Response fields
+
+include::{snippets}/authors/document-get-authors/response-fields.adoc[]
+
+[[resources-authors-links]]
+
+===== Links
+
+include::{snippets}/authors/document-get-authors/links.adoc[]
+
+
+[[resources-author]]
+==== Single Author
+
+The single author provides the entry point into the author's detail resource service.
+
+[[resources-author-access]]
+===== Request
+
+A `GET` request is used to access a single author
+
+include::{snippets}/authors/document-get-author/http-request.adoc[]
+
+include::{snippets}/authors/document-get-author/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/authors/document-get-author/http-response.adoc[]
+
+===== Response fields
+
+include::{snippets}/authors/document-get-author/response-fields.adoc[]
+
+[[resources-author-links]]
+
+===== Links
+
+include::{snippets}/authors/document-get-author/links.adoc[]
+
+
+[[resources-create-author]]
+==== Create Author
+
+This provides the entry point for creating new author resources.
+
+[[resources-create-author-access]]
+===== Request
+
+A `POST` request is used to create a new author
+
+===== Request fields
+
+include::{snippets}/authors/document-create-author/request-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/authors/document-create-author/http-request.adoc[]
+
+include::{snippets}/authors/document-create-author/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/authors/document-create-author/http-response.adoc[]
+
+===== Response fields
+
+include::{snippets}/authors/document-create-author/response-fields.adoc[]
+
+[[resources-create-author-links]]
+
+===== Links
+
+include::{snippets}/authors/document-create-author/links.adoc[]
+
+
+[[resources-delete-author]]
+==== Delete Author
+
+This provides the entry point to delete an author resource.
+
+[[resources-delete-author-access]]
+===== Request
+
+A `DELETE` request is used to delete an author
+
+include::{snippets}/authors/document-delete-author/http-request.adoc[]
+
+include::{snippets}/authors/document-delete-author/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/authors/document-delete-author/http-response.adoc[]
+
+
+[[resources-find-authors-lastname]]
+==== Find Authors by last name
+
+This provides the entry point for searching authors by last name.
+
+===== Request
+
+A `GET` request is used to search authors by last name
+
+===== Request parameters
+
+include::{snippets}/authors/document-find-authors-by-lastname/request-parameters.adoc[]
+
+===== Example request
+
+include::{snippets}/authors/document-find-authors-by-lastname/http-request.adoc[]
+
+include::{snippets}/authors/document-find-authors-by-lastname/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/authors/document-find-authors-by-lastname/http-response.adoc[]
+
+===== Response fields
+
+include::{snippets}/authors/document-find-authors-by-lastname/response-fields.adoc[]
+
+[[resources-book-links]]
+
+===== Links
+
+include::{snippets}/authors/document-find-authors-by-lastname/links.adoc[]
+

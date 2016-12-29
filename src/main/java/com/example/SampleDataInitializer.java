@@ -11,7 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 /**
- * Created by afa on 27.12.16.
+ * Creates some sample data for application.
  */
 @Service
 public class SampleDataInitializer implements CommandLineRunner {

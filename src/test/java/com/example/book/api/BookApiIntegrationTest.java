@@ -113,10 +113,11 @@ public class BookApiIntegrationTest {
 
         phoenix = new Book(phoenixBookId, "Project Phoenix", "978-0-9587-5175-0",
                 "Bill is an IT manager at Parts Unlimited...", Genre.COMPUTER);
-
+        ReflectionTestUtils.setField(phoenix, "version", 1L);
         potter = new Book(potterBookId, "Harry Potter and the Cursed Child", "978-0-7515-6535-5",
                 "Based on an original new story by J.K. Rowling, John Tiffany and Jack Thorne, ...",
                 Genre.COMPUTER);
+        ReflectionTestUtils.setField(potter, "version", 1L);
 
         when(bookService.findAllBooks()).thenReturn(Arrays.asList(phoenix, potter));
 
@@ -129,6 +130,7 @@ public class BookApiIntegrationTest {
         when(bookService.createBook(any(Book.class))).thenAnswer(invocation -> {
             Book book = invocation.getArgumentAt(0, Book.class);
             ReflectionTestUtils.setField(book, "id", 1L);
+            ReflectionTestUtils.setField(book, "version", 1L);
             return book;
         });
 

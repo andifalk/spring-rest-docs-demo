@@ -18,7 +18,6 @@ import static com.example.author.entity.Author.*;
  */
 public class CreateAuthorResource {
 
-    @NotNull
     private UUID identifier;
 
     @NotNull
