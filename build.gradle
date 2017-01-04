@@ -1,6 +1,7 @@
 buildscript {
 	ext {
 		springBootVersion = '1.4.3.RELEASE'
+		springSecurityVersion = '4.1.4.RELEASE'
         snippetsDir = file('build/generated-snippets')
 	}
 	repositories {
@@ -51,9 +52,11 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-data-jpa')
 	compile('org.springframework.boot:spring-boot-starter-hateoas')
 	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.springframework.boot:spring-boot-starter-security')
 	compile('org.apache.commons:commons-lang3:3.5')
 	runtime('org.springframework.boot:spring-boot-devtools')
 	runtime('com.h2database:h2')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc')
+	testCompile("org.springframework.security:spring-security-test:${springSecurityVersion}")
 }

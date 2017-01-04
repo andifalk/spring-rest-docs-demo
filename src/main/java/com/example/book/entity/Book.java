@@ -1,13 +1,19 @@
 package com.example.book.entity;
 
 import com.example.author.entity.Author;
+import com.example.common.AbstractAuditableEntity;
 import com.example.common.StringEnumeration;
+import com.example.user.entity.User;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.AbstractAuditable;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -15,8 +21,9 @@ import java.util.UUID;
 /**
  * Person entity.
  */
+@EntityListeners(AuditingEntityListener.class)
 @Entity
-public class Book extends AbstractPersistable<Long> {
+public class Book extends AbstractAuditableEntity {
 
     public static final int MAX_BOOK_TITLE_LENGTH = 100;
     public static final int MIN_BOOK_TITLE_LENGTH = 1;

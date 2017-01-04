@@ -1,7 +1,7 @@
 package com.example.author.entity;
 
+import com.example.common.AbstractAuditableEntity;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -12,7 +12,7 @@ import java.util.UUID;
  * Author entity.
  */
 @Entity
-public class Author extends AbstractPersistable<Long> {
+public class Author extends AbstractAuditableEntity {
 
     public static final int MAX_AUTHOR_FIRSTNAME_LENGTH = 50;
     public static final int MIN_AUTHOR_FIRSTNAME_LENGTH = 1;

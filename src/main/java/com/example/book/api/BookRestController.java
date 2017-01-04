@@ -9,7 +9,7 @@ import com.example.book.entity.Book;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * RESTful api for {@link BookResource book resources}.
@@ -49,6 +50,7 @@ public class BookRestController {
                         .path("/{bookId}")
                         .buildAndExpand(book.getIdentifier()).toUri())
                 .eTag(book.getVersion().toString())
+                .lastModified(book.getLastModifiedAt().getTime())
                 .body(new BookResource(book));
     }
 
@@ -58,7 +60,12 @@ public class BookRestController {
         if (book == null) {
             return ResponseEntity.notFound().build();
         } else {
-            return ResponseEntity.ok().eTag(book.getVersion().toString()).body(new BookResource(book));
+            return ResponseEntity
+                    .ok()
+                    .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+                    .eTag(book.getVersion().toString())
+                    .lastModified(book.getLastModifiedAt().getTime())
+                    .body(new BookResource(book));
         }
     }
 
@@ -90,7 +97,7 @@ public class BookRestController {
         }
     }
 
-    @RequestMapping(path = "/{id}", method = RequestMethod.PUT)
+    @RequestMapping(path = "/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<?> updateBook(
             WebRequest request,
             @PathVariable("id") UUID identifier,
@@ -100,15 +107,19 @@ public class BookRestController {
             return ResponseEntity.notFound().build();
         }
 
-        if (request.checkNotModified(book.getVersion().toString())) {
+        if (request.checkNotModified(book.getVersion().toString(), book.getLastModifiedAt().getTime())) {
             book.setDescription(updateBookResource.getDescription());
             book.setGenre(updateBookResource.getGenre());
             book.setIsbn(updateBookResource.getIsbn());
             book.setTitle(updateBookResource.getTitle());
             book = bookService.updateBook(book);
-            return new ResponseEntity<>(new BookResource(book), HttpStatus.OK);
+            return ResponseEntity
+                    .ok()
+                    .eTag(book.getVersion().toString())
+                    .lastModified(book.getLastModifiedAt().getTime())
+                    .body(book);
         } else {
-            return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
+            return null; //ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
         }
     }
 

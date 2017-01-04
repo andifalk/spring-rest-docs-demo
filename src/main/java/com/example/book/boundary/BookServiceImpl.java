@@ -33,6 +33,7 @@ public class BookServiceImpl implements BookService {
         if (book.getIdentifier() == null) {
             book.setIdentifier(idGenerator.generateId());
         }
+        //book.setLastModified(System.currentTimeMillis());
         return this.bookRepository.save(book);
     }
 
@@ -65,6 +66,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book updateBook(Book book) {
+        //book.setLastModified(System.currentTimeMillis());
         return this.bookRepository.save(book);
     }
 }

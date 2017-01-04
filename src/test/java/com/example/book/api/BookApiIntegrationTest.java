@@ -1,10 +1,11 @@
 package com.example.book.api;
 
 import com.example.book.api.resource.CreateBookResource;
+import com.example.book.api.resource.UpdateBookResource;
 import com.example.book.boundary.BookService;
 import com.example.book.entity.Book;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.book.entity.Genre;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +20,7 @@ import org.springframework.restdocs.constraints.ConstraintDescriptions;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.restdocs.payload.ResponseFieldsSnippet;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.endsWith;
@@ -41,14 +44,11 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
-import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.snippet.Attributes.key;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -57,11 +57,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = BookRestController.class)
 @AutoConfigureRestDocs(outputDir = "build/generated-snippets/books")
+@WithMockUser
 public class BookApiIntegrationTest {
 
     private static final String EXPECTED_MEDIA_TYPE = MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8";
 
     private static final String LOCATION_HEADER = "Location";
+
+    private static final String IF_NONE_MATCH_HEADER = "If-None-Match";
+
+    private static final String IF_UNMODIFIED_SINCE_HEADER = "If-Unmodified-Since";
 
     @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
@@ -114,10 +119,12 @@ public class BookApiIntegrationTest {
         phoenix = new Book(phoenixBookId, "Project Phoenix", "978-0-9587-5175-0",
                 "Bill is an IT manager at Parts Unlimited...", Genre.COMPUTER);
         ReflectionTestUtils.setField(phoenix, "version", 1L);
+        ReflectionTestUtils.setField(phoenix, "lastModifiedAt", new Date());
         potter = new Book(potterBookId, "Harry Potter and the Cursed Child", "978-0-7515-6535-5",
                 "Based on an original new story by J.K. Rowling, John Tiffany and Jack Thorne, ...",
                 Genre.COMPUTER);
         ReflectionTestUtils.setField(potter, "version", 1L);
+        ReflectionTestUtils.setField(potter, "lastModifiedAt", new Date());
 
         when(bookService.findAllBooks()).thenReturn(Arrays.asList(phoenix, potter));
 
@@ -131,6 +138,15 @@ public class BookApiIntegrationTest {
             Book book = invocation.getArgumentAt(0, Book.class);
             ReflectionTestUtils.setField(book, "id", 1L);
             ReflectionTestUtils.setField(book, "version", 1L);
+            ReflectionTestUtils.setField(book, "lastModifiedAt", new Date());
+            return book;
+        });
+
+        when(bookService.updateBook(any(Book.class))).thenAnswer(invocation -> {
+            Book book = invocation.getArgumentAt(0, Book.class);
+            ReflectionTestUtils.setField(book, "id", 1L);
+            ReflectionTestUtils.setField(book, "version", 2L);
+            ReflectionTestUtils.setField(book, "lastModifiedAt", new Date());
             return book;
         });
 
@@ -187,6 +203,60 @@ public class BookApiIntegrationTest {
                         links(linkWithRel(Link.REL_SELF).description("Links to the created book")),
                         responseHeaders(
                                 headerWithName(LOCATION_HEADER)
+                                        .description("The location of created book resource")
+                        ),
+                        bookResponseFieldsSnippet
+                ));
+    }
+
+    @Test
+    public void documentAndVerifyUpdateBook() throws Exception {
+        UpdateBookResource updateBookResource = new UpdateBookResource("Project Phoenix", "978-0-9587-5175-0",
+                "Bill is an IT manager at Parts Unlimited", Genre.COMPUTER);
+
+        ConstrainedFields fields = new ConstrainedFields(UpdateBookResource.class);
+
+        this.mockMvc.perform(put(BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
+                .header(IF_NONE_MATCH_HEADER, "1")
+                .header(IF_UNMODIFIED_SINCE_HEADER, System.currentTimeMillis() - 10000)
+                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .content(new ObjectMapper().writeValueAsString(updateBookResource))
+                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.title").isString())
+                .andDo(
+                        document(
+                                "document-update-book",
+                                requestFields(
+                                        fields
+                                                .withPath("title")
+                                                .description("The book title")
+                                                .type(JsonFieldType.STRING),
+                                        fields
+                                                .withPath("isbn")
+                                                .description("The book's ISBN number (ISBN-13 format)")
+                                                .type(JsonFieldType.STRING),
+                                        fields
+                                                .withPath("genre")
+                                                .description("The book genre")
+                                                .type(JsonFieldType.STRING),
+                                        fields
+                                                .withPath("identifier")
+                                                .description("The book identifier (generated automatically if not set)")
+                                                .type(JsonFieldType.STRING)
+                                                .optional(),
+                                        fields
+                                                .withPath("description")
+                                                .description("The book description")
+                                                .type(JsonFieldType.STRING)
+                                                .optional()
+                                )
+                        ))
+                .andDo(document("document-update-book", preprocessResponse(prettyPrint()),
+                        links(linkWithRel(Link.REL_SELF).description("Links to the updated book")),
+                        responseHeaders(
+                                headerWithName("ETag")
                                         .description("The location of created book resource")
                         ),
                         bookResponseFieldsSnippet
