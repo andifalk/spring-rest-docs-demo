@@ -64,6 +64,7 @@ public class BookServiceImpl implements BookService {
         return count > 0;
     }
 
+    @Transactional
     @Override
     public Book updateBook(Book book) {
         //book.setLastModified(System.currentTimeMillis());

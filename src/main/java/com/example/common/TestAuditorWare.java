@@ -3,6 +3,7 @@ package com.example.common;
 import com.example.user.boundary.UserService;
 import com.example.user.entity.User;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -21,7 +22,7 @@ public class TestAuditorWare implements AuditorAware<User> {
     public User getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return userService.findByUsername("technical");
         }
 

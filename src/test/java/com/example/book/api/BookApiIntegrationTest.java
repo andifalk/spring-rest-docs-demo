@@ -64,7 +64,7 @@ public class BookApiIntegrationTest {
 
     private static final String LOCATION_HEADER = "Location";
 
-    private static final String IF_NONE_MATCH_HEADER = "If-None-Match";
+    private static final String IF_MATCH_HEADER = "If-Match";
 
     private static final String IF_UNMODIFIED_SINCE_HEADER = "If-Unmodified-Since";
 
@@ -217,8 +217,7 @@ public class BookApiIntegrationTest {
         ConstrainedFields fields = new ConstrainedFields(UpdateBookResource.class);
 
         this.mockMvc.perform(put(BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
-                .header(IF_NONE_MATCH_HEADER, "1")
-                .header(IF_UNMODIFIED_SINCE_HEADER, System.currentTimeMillis() - 10000)
+                .header(IF_MATCH_HEADER, "1")
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .content(new ObjectMapper().writeValueAsString(updateBookResource))
                 .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))

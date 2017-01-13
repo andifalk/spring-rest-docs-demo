@@ -162,6 +162,10 @@ public class Book extends AbstractAuditableEntity {
         return version;
     }
 
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     @Override
     public String toString() {
         return new org.apache.commons.lang3.builder.ToStringBuilder(this)

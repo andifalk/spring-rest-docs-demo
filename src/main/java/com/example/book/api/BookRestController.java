@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 public class BookRestController {
 
     public static final String BOOK_RESOURCE_PATH = "/books";
+    public static final String IF_MATCH_HEADER = "If-Match";
 
     private final BookService bookService;
 
@@ -107,7 +108,8 @@ public class BookRestController {
             return ResponseEntity.notFound().build();
         }
 
-        if (request.checkNotModified(book.getVersion().toString(), book.getLastModifiedAt().getTime())) {
+        String ifMatchHeaderValue = request.getHeader(IF_MATCH_HEADER);
+        if (book.getVersion().toString().equals(ifMatchHeaderValue) || request.checkNotModified(book.getVersion().toString())) {
             book.setDescription(updateBookResource.getDescription());
             book.setGenre(updateBookResource.getGenre());
             book.setIsbn(updateBookResource.getIsbn());
@@ -119,7 +121,7 @@ public class BookRestController {
                     .lastModified(book.getLastModifiedAt().getTime())
                     .body(book);
         } else {
-            return null; //ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
+            return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
         }
     }
 
