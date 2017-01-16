@@ -16,6 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
+import org.springframework.orm.jpa.JpaOptimisticLockingFailureException;
 import org.springframework.restdocs.constraints.ConstraintDescriptions;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
@@ -26,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.OptimisticLockException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -65,8 +67,6 @@ public class BookApiIntegrationTest {
     private static final String LOCATION_HEADER = "Location";
 
     private static final String IF_MATCH_HEADER = "If-Match";
-
-    private static final String IF_UNMODIFIED_SINCE_HEADER = "If-Unmodified-Since";
 
     @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
@@ -139,14 +139,9 @@ public class BookApiIntegrationTest {
             ReflectionTestUtils.setField(book, "id", 1L);
             ReflectionTestUtils.setField(book, "version", 1L);
             ReflectionTestUtils.setField(book, "lastModifiedAt", new Date());
-            return book;
-        });
-
-        when(bookService.updateBook(any(Book.class))).thenAnswer(invocation -> {
-            Book book = invocation.getArgumentAt(0, Book.class);
-            ReflectionTestUtils.setField(book, "id", 1L);
-            ReflectionTestUtils.setField(book, "version", 2L);
-            ReflectionTestUtils.setField(book, "lastModifiedAt", new Date());
+            if (book.getIdentifier() == null) {
+                book.setIdentifier(UUID.randomUUID());
+            }
             return book;
         });
 
@@ -211,6 +206,18 @@ public class BookApiIntegrationTest {
 
     @Test
     public void documentAndVerifyUpdateBook() throws Exception {
+
+        when(bookService.updateBook(any(Book.class))).thenAnswer(invocation -> {
+            Book book = invocation.getArgumentAt(0, Book.class);
+            ReflectionTestUtils.setField(book, "id", 1L);
+            ReflectionTestUtils.setField(book, "version", 2L);
+            ReflectionTestUtils.setField(book, "lastModifiedAt", new Date());
+            if (book.getIdentifier() == null) {
+                book.setIdentifier(UUID.randomUUID());
+            }
+            return book;
+        });
+
         UpdateBookResource updateBookResource = new UpdateBookResource("Project Phoenix", "978-0-9587-5175-0",
                 "Bill is an IT manager at Parts Unlimited", Genre.COMPUTER);
 
@@ -222,6 +229,7 @@ public class BookApiIntegrationTest {
                 .content(new ObjectMapper().writeValueAsString(updateBookResource))
                 .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
                 .andExpect(status().isOk())
+                .andExpect(header().string("ETag", "\"2\""))
                 .andExpect(jsonPath("$.id").isString())
                 .andExpect(jsonPath("$.title").isString())
                 .andDo(
@@ -260,6 +268,37 @@ public class BookApiIntegrationTest {
                         ),
                         bookResponseFieldsSnippet
                 ));
+    }
+
+    @Test
+    public void verifyUpdateBookPreconditionFailed() throws Exception {
+        UpdateBookResource updateBookResource = new UpdateBookResource("Project Phoenix", "978-0-9587-5175-0",
+                "Bill is an IT manager at Parts Unlimited", Genre.COMPUTER);
+
+        this.mockMvc.perform(put(BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
+                .header(IF_MATCH_HEADER, "0")
+                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .content(new ObjectMapper().writeValueAsString(updateBookResource))
+                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .andExpect(status().isPreconditionFailed());
+    }
+
+    @Test
+    public void verifyUpdateBookConflict() throws Exception {
+
+        when(bookService.updateBook(any(Book.class))).thenThrow(
+                new JpaOptimisticLockingFailureException(
+                        new OptimisticLockException("Conflict: Book has been changed by another user")));
+
+        UpdateBookResource updateBookResource = new UpdateBookResource("Project Phoenix", "978-0-9587-5175-0",
+                "Bill is an IT manager at Parts Unlimited", Genre.COMPUTER);
+
+        this.mockMvc.perform(put(BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
+                .header(IF_MATCH_HEADER, "1")
+                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .content(new ObjectMapper().writeValueAsString(updateBookResource))
+                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .andExpect(status().isConflict());
     }
 
     @Test

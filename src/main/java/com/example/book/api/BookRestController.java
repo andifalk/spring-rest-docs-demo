@@ -119,7 +119,7 @@ public class BookRestController {
                     .ok()
                     .eTag(book.getVersion().toString())
                     .lastModified(book.getLastModifiedAt().getTime())
-                    .body(book);
+                    .body(new BookResource(book));
         } else {
             return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
         }
