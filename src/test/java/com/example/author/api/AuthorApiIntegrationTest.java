@@ -19,6 +19,7 @@ import org.springframework.restdocs.constraints.ConstraintDescriptions;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.restdocs.payload.ResponseFieldsSnippet;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -55,6 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = AuthorRestController.class)
 @AutoConfigureRestDocs(outputDir = "build/generated-snippets/authors")
+@WithMockUser
 public class AuthorApiIntegrationTest {
 
     private static final String EXPECTED_MEDIA_TYPE = MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8";

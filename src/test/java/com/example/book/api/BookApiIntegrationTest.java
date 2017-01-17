@@ -62,7 +62,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser
 public class BookApiIntegrationTest {
 
-    private static final String EXPECTED_MEDIA_TYPE = MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8";
+    private static final String EXPECTED_JSON_MEDIA_TYPE = MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8";
+    private static final String EXPECTED_XML_MEDIA_TYPE = MediaType.APPLICATION_ATOM_XML_VALUE + ";charset=UTF-8";
 
     private static final String LOCATION_HEADER = "Location";
 
@@ -161,7 +162,7 @@ public class BookApiIntegrationTest {
         this.mockMvc.perform(post(BookRestController.BOOK_RESOURCE_PATH)
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .content(new ObjectMapper().writeValueAsString(createBookResource))
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isCreated())
                 .andExpect(header().string(LOCATION_HEADER, endsWith(expectedUrl)))
                 .andExpect(jsonPath("$.id").isString())
@@ -227,7 +228,7 @@ public class BookApiIntegrationTest {
                 .header(IF_MATCH_HEADER, "1")
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .content(new ObjectMapper().writeValueAsString(updateBookResource))
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", "\"2\""))
                 .andExpect(jsonPath("$.id").isString())
@@ -279,7 +280,7 @@ public class BookApiIntegrationTest {
                 .header(IF_MATCH_HEADER, "0")
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .content(new ObjectMapper().writeValueAsString(updateBookResource))
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isPreconditionFailed());
     }
 
@@ -297,7 +298,7 @@ public class BookApiIntegrationTest {
                 .header(IF_MATCH_HEADER, "1")
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .content(new ObjectMapper().writeValueAsString(updateBookResource))
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isConflict());
     }
 
@@ -305,9 +306,9 @@ public class BookApiIntegrationTest {
     public void documentAndVerifyFindByIdentifier() throws Exception {
 
         this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(EXPECTED_MEDIA_TYPE))
+                .andExpect(content().contentType(EXPECTED_JSON_MEDIA_TYPE))
                 .andExpect(jsonPath("$.id").isString())
                 .andExpect(jsonPath("$.title").isString())
                 .andDo(
@@ -322,9 +323,9 @@ public class BookApiIntegrationTest {
     public void documentAndVerifyFindAllBooks() throws Exception {
 
         this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH)
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(EXPECTED_MEDIA_TYPE))
+                .andExpect(content().contentType(EXPECTED_JSON_MEDIA_TYPE))
                 .andExpect(jsonPath("$.books").isArray())
                 .andExpect(jsonPath("$.books.length()").value(is(2)))
                 .andDo(
@@ -336,11 +337,24 @@ public class BookApiIntegrationTest {
     }
 
     @Test
+    public void documentAndVerifyFindAllBooksAtomXml() throws Exception {
+
+        this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH)
+                .accept(MediaType.parseMediaType(EXPECTED_XML_MEDIA_TYPE)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(EXPECTED_XML_MEDIA_TYPE))
+                .andDo(
+                        document("document-get-books-xml",
+                                preprocessResponse(prettyPrint())
+                        ));
+    }
+
+    @Test
     public void documentAndVerifyFindByIsbn() throws Exception {
         this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH + "/search?isbn=" + phoenix.getIsbn())
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(EXPECTED_MEDIA_TYPE))
+                .andExpect(content().contentType(EXPECTED_JSON_MEDIA_TYPE))
                 .andExpect(jsonPath("$.books").isArray())
                 .andExpect(jsonPath("$.books.length()").value(is(1)))
                 .andDo(
@@ -365,9 +379,9 @@ public class BookApiIntegrationTest {
     @Test
     public void documentAndVerifyFindByTitle() throws Exception {
         this.mockMvc.perform(get(BookRestController.BOOK_RESOURCE_PATH + "/search?title=" + potter.getTitle())
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(EXPECTED_MEDIA_TYPE))
+                .andExpect(content().contentType(EXPECTED_JSON_MEDIA_TYPE))
                 .andExpect(jsonPath("$.books").isArray())
                 .andExpect(jsonPath("$.books.length()").value(is(1)))
                 .andDo(
@@ -393,7 +407,7 @@ public class BookApiIntegrationTest {
     public void documentAndVerifyDeleteBook() throws Exception {
         this.mockMvc.perform(delete(
                 BookRestController.BOOK_RESOURCE_PATH + "/{id}", phoenixBookId.toString())
-                .accept(MediaType.parseMediaType(EXPECTED_MEDIA_TYPE)))
+                .accept(MediaType.parseMediaType(EXPECTED_JSON_MEDIA_TYPE)))
                 .andExpect(status().isNoContent())
                 .andDo(
                         document("document-delete-book"));

@@ -7,6 +7,9 @@ import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.util.Assert;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -16,9 +19,14 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 /**
  * Resource for a collection of {@link BookResource book resources}.
  */
+@XmlRootElement(name = "Books")
 public class BookListResource extends ResourceSupport {
 
-    private final Collection<BookResource> bookResources;
+    private Collection<BookResource> bookResources;
+
+    public BookListResource() {
+        super();
+    }
 
     public BookListResource(Collection<Book> books, String isbn, String title) {
         Assert.notNull(books, "Books must be set");
@@ -34,6 +42,7 @@ public class BookListResource extends ResourceSupport {
         }
     }
 
+    @XmlElement(name="Book")
     public Collection<BookResource> getBooks() {
         return bookResources;
     }

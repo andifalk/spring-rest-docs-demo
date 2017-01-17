@@ -79,6 +79,12 @@ use of HTTP status codes.
 | `405 Method Not Allowed`
 | API called with invalid HTTP verb (e.g. 'GET' instead of 'PUT')
 
+| `409 Conflict`
+| Updating requested resource had a conflict (i.e. overwrites changes by another user)
+
+| `412 Precondition failed`
+| The request violates a precondition (e.g. wrong state of a resource)
+
 | `500 Internal Server Error`
 | Server reported an internal error during processing of API call. For security reasons no further details are
 provided here
@@ -128,6 +134,17 @@ include::{snippets}/books/document-get-books/response-fields.adoc[]
 ===== Links
 
 include::{snippets}/books/document-get-books/links.adoc[]
+
+===== Atom XML format
+
+The list of books resource supports media type 'application/atom+xml'
+as additional representation
+
+include::{snippets}/books/document-get-books-xml/http-request.adoc[]
+
+include::{snippets}/books/document-get-books-xml/curl-request.adoc[]
+
+include::{snippets}/books/document-get-books-xml/http-response.adoc[]
 
 
 [[resources-book]]
@@ -192,6 +209,42 @@ include::{snippets}/books/document-create-book/response-fields.adoc[]
 ===== Links
 
 include::{snippets}/books/document-create-book/links.adoc[]
+
+
+[[resources-update-book]]
+==== Update Book
+
+This provides the entry point for updating book resources.
+
+[[resources-update-book-access]]
+===== Request
+
+A `PUT` request is used to update a book
+
+===== Request fields
+
+include::{snippets}/books/document-update-book/request-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/books/document-update-book/http-request.adoc[]
+
+include::{snippets}/books/document-update-book/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/books/document-update-book/http-response.adoc[]
+
+===== Response fields
+
+include::{snippets}/books/document-update-book/response-fields.adoc[]
+
+[[resources-update-book-links]]
+
+===== Links
+
+include::{snippets}/books/document-update-book/links.adoc[]
+
 
 
 [[resources-delete-book]]

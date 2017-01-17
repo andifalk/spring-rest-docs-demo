@@ -27,7 +27,11 @@ import java.util.concurrent.TimeUnit;
  */
 @RestController
 @RequestMapping(path = BookRestController.BOOK_RESOURCE_PATH,
-        produces = {MediaType.APPLICATION_JSON_UTF8_VALUE, MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8"})
+        produces = {
+                        MediaType.APPLICATION_JSON_UTF8_VALUE,
+                        MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8",
+                        MediaType.APPLICATION_ATOM_XML_VALUE + ";charset=UTF-8"
+        })
 public class BookRestController {
 
     public static final String BOOK_RESOURCE_PATH = "/books";
